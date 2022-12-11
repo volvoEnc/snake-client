@@ -63,12 +63,15 @@ export default class MainScene extends Phaser.Scene {
 
         socket.on('step', (data) => {
             data.eats.forEach((data) => {
-                const candidate = this.eats.find((eat) => eat.id === data.id)
-                if(!candidate) {
-                    const eat = new Eat(this, data)
-                    eat.render()
-                    this.eats.push(eat)
+                if(data) {
+                    const candidate = this.eats.find((eat) => eat.id === data.id)
+                    if(!candidate) {
+                        const eat = new Eat(this, data)
+                        eat.render()
+                        this.eats.push(eat)
+                    }
                 }
+
 
             })
             data.players.forEach((dataSnake) => {
