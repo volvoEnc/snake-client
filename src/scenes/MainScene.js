@@ -1,5 +1,6 @@
 import Snake from "../Entities/Snake.js";
 import {socket} from "../../main.js";
+import Eat from "../Entities/Eat.js";
 
 export default class MainScene extends Phaser.Scene {
     w = 32;
@@ -8,6 +9,7 @@ export default class MainScene extends Phaser.Scene {
     height;
 
     snakes = []
+    eats = []
 
     push
 
@@ -49,118 +51,53 @@ export default class MainScene extends Phaser.Scene {
             this.map.push(rowMap);
         }
 
-        // this.gameLoop = this.time.addEvent({
-        //     repeat: -1,
-        //     delay: 200,
-        //     callback: () => {
-        //         if (this.eat === null) {
-        //             this.eat = this.spawnEat();
-        //         }
-        //
-        //         try {
-        //             this.linesState = this.snake.calcLines();
-        //         } catch (e) {
-        //             this.gameLoop.destroy();
-        //             this.reward = -100;
-        //             console.log('lose')
-        //         }
-        //         const state = this.getMapState();
-        //         this.saveMapState(state);
-        //
-        //         this.snake.updateDirection();
-        //         this.snake.move();
-        //         this.reward -= 1;
-        //         if (this.snake.checkEat()) {
-        //             this.eat.ceil.destroy(true);
-        //             this.eat = null;
-        //             this.reward += 30;
-        //         }
-        //         this.snake.draw();
-        //
-        //         let tmpDelay = 200 - this.reward / 2;
-        //         if (tmpDelay < 50) {
-        //             tmpDelay = 25;
-        //         }
-        //         if (tmpDelay > 400) {
-        //             tmpDelay = 400;
-        //         }
-        //         this.gameLoop.delay = tmpDelay;
-        //     }
-        // });
-
         socket.on('create-id', (data) => {
             this.playerID = data.id
             socket.emit('ready')
         })
         socket.on('create', (data) => {
             data.players.forEach((snake) => {
-                this.snakes.push(new Snake(this, snake.id, snake.body));
+                this.snakes.push(new Snake(this, snake.id, snake.body, snake.color));
             })
         })
 
         socket.on('step', (data) => {
+            data.eats.forEach((data) => {
+                const candidate = this.eats.find((eat) => eat.id === data.id)
+                if(!candidate) {
+                    const eat = new Eat(this, data)
+                    eat.render()
+                    this.eats.push(eat)
+                }
+
+            })
             data.players.forEach((dataSnake) => {
                 const candidate = this.snakes.find((snake) => snake.playerID === dataSnake.id)
-                if(candidate) {
+                if (candidate) {
                     candidate.updateBody(dataSnake.body)
                 }
             })
         })
 
+        socket.on('delete-player', (data) => {
+            const candidate = this.snakes.find((snake) => data.id === snake.playerID)
+            if (candidate) {
+                candidate.destroy()
+            }
+        })
+
+        socket.on('delete-eat', (data) => {
+            const candidate = this.eats.find((eat) => eat.id === data.id)
+            if(candidate) {
+                candidate.destroy()
+            }
+        })
+
         socket.emit('init');
     }
-    //
-    // spawnEat() {
-    //     let isBlocked = false;
-    //     let eat = null;
-    //     const mx = Phaser.Math.Between(0, this.width);
-    //     const my = Phaser.Math.Between(0, this.height);
-    //
-    //     if (this.map[my][mx] === 1) {
-    //         isBlocked = true;
-    //     }
-    //     for (const bodyCeil of this.snake.body) {
-    //         if (bodyCeil.mx === mx && bodyCeil.my === my) {
-    //             isBlocked = true;
-    //             break;
-    //         }
-    //     }
-    //     if (!isBlocked) {
-    //         const ceil = this.add.rectangle(this.width * mx, this.height * my, this.width, this.height, 0x00ff00).setOrigin(0);
-    //         eat = {mx, my, ceil};
-    //     }
-    //
-    //     return eat;
-    // }
-    //
-    // saveMapState(state) {
-    //     // socket.emit('write_state', state);
-    // }
-    //
-    // getMapState() {
-    //     const eatState = {eatx: -1, eaty: -1};
-    //     if (this.eat) {
-    //         eatState.eatx = this.eat.mx;
-    //         eatState.eaty = this.eat.my;
-    //     }
-    //     return {
-    //         reward: this.reward,
-    //         dir: this.snake.direction,
-    //         mx: this.snake.body[0].mx,
-    //         my: this.snake.body[0].my,
-    //         eatx: eatState.eatx,
-    //         eaty: eatState.eaty,
-    //         lt: this.linesState.t,
-    //         ld: this.linesState.d,
-    //         ll: this.linesState.l,
-    //         lr: this.linesState.r,
-    //     };
-    // }
 
     update(time, delta) {
         this.snakes.forEach((snake) => {
-            console.log(this.playerID)
-            console.log(snake.id)
             if(this.playerID !== undefined && this.playerID === snake.playerID) {
                 snake.update();
             }

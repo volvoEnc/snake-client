@@ -5,9 +5,10 @@ export default class Snake {
     direction = 'up';
     isAppend = false;
 
-    constructor(scene, playerID, body) {
+    constructor(scene, playerID, body, color) {
         this.body = body;
         this.scene = scene;
+        this.color = color;
         this.playerID = playerID;
 
         if(this.scene.playerID === this.playerID) {
@@ -23,11 +24,7 @@ export default class Snake {
     }
 
     updateBody(body) {
-        for (const bodyCeil of this.body) {
-            if (bodyCeil.ceil !== undefined) {
-                bodyCeil.ceil.destroy(true)
-            }
-        }
+        this.destroy()
 
         this.body = body;
         this.draw()
@@ -156,13 +153,21 @@ export default class Snake {
     draw() {
         for (const bodyCeil of this.body) {
             if (bodyCeil.ceil === undefined) {
-                bodyCeil.ceil = this.scene.add.rectangle(0, 0, this.scene.width, this.scene.height, 0xff0000).setOrigin(0);
+                bodyCeil.ceil = this.scene.add.rectangle(0, 0, this.scene.width, this.scene.height, parseInt(this.color)).setOrigin(0);
             }
 
             const x = bodyCeil.mx * this.scene.width;
             const y = bodyCeil.my * this.scene.height;
             bodyCeil.ceil.x = x;
             bodyCeil.ceil.y = y;
+        }
+    }
+
+    destroy() {
+        for (const bodyCeil of this.body) {
+            if (bodyCeil.ceil !== undefined) {
+                bodyCeil.ceil.destroy(true)
+            }
         }
     }
 
