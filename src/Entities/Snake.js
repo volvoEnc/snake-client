@@ -45,30 +45,30 @@ export default class Snake {
                 }
             }
 
-            this.scene.tweens.add({
-                targets: bodyGroups.up,
-                ease: 'Linear',
-                duration: 50,
-                y: `-=${this.scene.width}`
-            });
-            this.scene.tweens.add({
-                targets: bodyGroups.down,
-                ease: 'Linear',
-                duration: 50,
-                y: `+=${this.scene.width}`
-            });
-            this.scene.tweens.add({
-                targets: bodyGroups.left,
-                ease: 'Linear',
-                duration: 50,
-                x: `-=${this.scene.width}`
-            });
-            this.scene.tweens.add({
-                targets: bodyGroups.right,
-                ease: 'Linear',
-                duration: 50,
-                x: `+=${this.scene.width}`
-            });
+            // this.scene.tweens.add({
+            //     targets: bodyGroups.up,
+            //     ease: 'Linear',
+            //     duration: 50,
+            //     y: `-=${this.scene.width}`
+            // });
+            // this.scene.tweens.add({
+            //     targets: bodyGroups.down,
+            //     ease: 'Linear',
+            //     duration: 50,
+            //     y: `+=${this.scene.width}`
+            // });
+            // this.scene.tweens.add({
+            //     targets: bodyGroups.left,
+            //     ease: 'Linear',
+            //     duration: 50,
+            //     x: `-=${this.scene.width}`
+            // });
+            // this.scene.tweens.add({
+            //     targets: bodyGroups.right,
+            //     ease: 'Linear',
+            //     duration: 50,
+            //     x: `+=${this.scene.width}`
+            // });
         }
     }
 
