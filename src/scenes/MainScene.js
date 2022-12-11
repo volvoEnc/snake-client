@@ -104,6 +104,7 @@ export default class MainScene extends Phaser.Scene {
             if(this.playerID !== undefined && this.playerID === snake.playerID) {
                 snake.update();
             }
+            snake.animationMove();
         })
         super.update(time, delta);
     }

@@ -27,74 +27,49 @@ export default class Snake {
         this.destroy()
 
         this.body = body;
-        this.draw()
-    }
-    calcLines() {
-        const directions = ['up', 'down', 'left', 'right'];
-        const state = {
-            t: 0,
-            d: 0,
-            l: 0,
-            r: 0
-        };
-        for (const direction of directions) {
-            let blocks = 0 ;
-            let detect = false;
-            do {
-                switch (direction) {
-                    case 'up':
-                        if (this.scene.map[this.body[0].my - (blocks + 1)][this.body[0].mx] === 0) {
-                            blocks++;
-                        } else { detect = true; state.t = blocks; }
-                        break;
-                    case 'down':
-                        if (this.scene.map[this.body[0].my + (blocks + 1)][this.body[0].mx] === 0) {
-                            blocks++;
-                        } else { detect = true; state.d = blocks; }
-                        break;
-                    case 'left':
-                        if (this.scene.map[this.body[0].my][this.body[0].mx - (blocks + 1)] === 0) {
-                            blocks++;
-                        } else { detect = true; state.l = blocks; }
-                        break;
-                    case 'right':
-                        if (this.scene.map[this.body[0].my][this.body[0].mx + (blocks + 1)] === 0) {
-                            blocks++;
-                        } else { detect = true; state.r = blocks; }
-                        break;
+        this.draw();
+
+        for (const bodyCeil of this.body) {
+            const bodyGroups = {
+                up: [],
+                down: [],
+                left: [],
+                right: []
+            };
+            if (bodyCeil.ceil) {
+                switch (bodyCeil.d) {
+                    case 'up': bodyGroups.up.push(bodyCeil.ceil); break;
+                    case 'down': bodyGroups.down.push(bodyCeil.ceil); break;
+                    case 'left': bodyGroups.left.push(bodyCeil.ceil); break;
+                    case 'right': bodyGroups.right.push(bodyCeil.ceil); break;
                 }
-            } while (!detect)
-        }
+            }
 
-        return state;
-    }
-
-    checkEat() {
-        if (this.scene.eat && this.body[0].mx === this.scene.eat.mx && this.body[0].my === this.scene.eat.my) {
-            this.appendBody();
-            return true;
+            this.scene.tweens.add({
+                targets: bodyGroups.up,
+                ease: 'Linear',
+                duration: 300,
+                y: `-=${this.scene.width}`
+            });
+            this.scene.tweens.add({
+                targets: bodyGroups.down,
+                ease: 'Linear',
+                duration: 300,
+                y: `+=${this.scene.width}`
+            });
+            this.scene.tweens.add({
+                targets: bodyGroups.left,
+                ease: 'Linear',
+                duration: 300,
+                x: `-=${this.scene.width}`
+            });
+            this.scene.tweens.add({
+                targets: bodyGroups.right,
+                ease: 'Linear',
+                duration: 300,
+                x: `+=${this.scene.width}`
+            });
         }
-        return false;
-    }
-
-    updateDirection() {
-        if (this.keyWDown && this.direction !== 'down') {
-            this.direction = 'up';
-        }
-        if ( this.keySDown && this.direction !== 'up') {
-            this.direction = 'down';
-        }
-        if (this.keyADown && this.direction !== 'right') {
-            this.direction = 'left';
-        }
-        if (this.keyDDown && this.direction !== 'left') {
-            this.direction = 'right';
-        }
-
-        this.keyWDown = false;
-        this.keySDown = false;
-        this.keyADown = false;
-        this.keyDDown = false;
     }
 
     update() {
@@ -147,7 +122,12 @@ export default class Snake {
             })
             this.direction = direction
         }
+    }
 
+    animationMove() {
+        // for (const bodyElement of this.body) {
+        //
+        // }
     }
 
     draw() {
@@ -173,36 +153,4 @@ export default class Snake {
             }
         }
     }
-
-    move() {
-        for (let i = (this.body.length - 1); i >= 0; i--) {
-            // Голова
-            if (i === 0) {
-                switch (this.direction) {
-                    case 'up': this.body[i].my -= 1; break;
-                    case 'down':this.body[i].my += 1; break;
-                    case 'left': this.body[i].mx -= 1; break;
-                    case 'right': this.body[i].mx += 1; break;
-                }
-                break;
-            }
-
-            // Хвост
-            if (i === (this.body.length - 1) && this.isAppend) {
-                this.isAppend = false;
-                this.body.push({mx: this.body[i].mx, my: this.body[i].my, ceil: null});
-            }
-
-            this.body[i].mx = this.body[i - 1].mx;
-            this.body[i].my = this.body[i - 1].my;
-        }
-    }
-
-
-    /** Замейка растет */
-    appendBody() {
-        this.isAppend = true;
-    }
-
-
 }
