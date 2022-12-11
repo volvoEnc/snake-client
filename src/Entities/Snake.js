@@ -3,7 +3,7 @@ import {socket} from "../../main.js";
 export default class Snake {
     body = [];
     direction = 'up';
-    speed = 200;
+    speed = 175;
 
     constructor(scene, playerID, body, color) {
         this.body = body;
