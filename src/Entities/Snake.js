@@ -153,7 +153,10 @@ export default class Snake {
     draw() {
         for (const bodyCeil of this.body) {
             if (bodyCeil.ceil === undefined) {
-                bodyCeil.ceil = this.scene.add.rectangle(0, 0, this.scene.width, this.scene.height, parseInt(this.color)).setOrigin(0);
+                bodyCeil.ceil = this.scene.add.circle(0, 0, 12, parseInt(this.color)).setOrigin(0);
+                if(this.scene.playerID === this.playerID) {
+                    bodyCeil.ceil.setStrokeStyle(1, 0x000000)
+                }
             }
 
             const x = bodyCeil.mx * this.scene.width;

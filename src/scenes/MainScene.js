@@ -39,7 +39,7 @@ export default class MainScene extends Phaser.Scene {
             for (let j = 0; j < this.w; j++) {
                 x = this.width * j;
                 y = this.height * i;
-                const ceil = this.add.rectangle(x, y, this.width, this.height).setStrokeStyle(1, 0x000000).setOrigin(0).setDepth(10);
+                const ceil = this.add.rectangle(x, y, this.width, this.height).setStrokeStyle(0, 0x000000).setOrigin(0).setDepth(10);
                 let ceilValue = 0;
                 if (j === 0 || j === (this.w - 1) || i === 0 || i === (this.h - 1)) {
                     ceil.setFillStyle(0xcccccc);
