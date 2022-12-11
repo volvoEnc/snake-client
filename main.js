@@ -4,7 +4,7 @@ import Phaser from "phaser";
 import MainScene from "./src/scenes/MainScene.js";
 import {io} from "socket.io-client";
 
-export const socket = io('ws://localhost:8091');
+export const socket = io('ws://212.220.200.39:9003');
 export const phaserConfig = {
     type: Phaser.AUTO,
     width: 768,

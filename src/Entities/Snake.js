@@ -1,27 +1,37 @@
+import {socket} from "../../main.js";
+
 export default class Snake {
     body = [];
     direction = 'up';
     isAppend = false;
 
-    constructor(scene, mx, my) {
-        this.body = [];
+    constructor(scene, playerID, body) {
+        this.body = body;
         this.scene = scene;
+        this.playerID = playerID;
 
-        for (let i = 1; i <= 5; i++) {
-            this.body.push({mx, my: my + i, ceil: null});
+        if(this.scene.playerID === this.playerID) {
+            this.keyW = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+            this.keyS = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+            this.keyA = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+            this.keyD = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+            this.keyWDown = false;
+            this.keySDown = false;
+            this.keyADown = false;
+            this.keyDDown = false;
         }
-
-
-        this.keyW = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-        this.keyS = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-        this.keyA = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-        this.keyD = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        this.keyWDown = false;
-        this.keySDown = false;
-        this.keyADown = false;
-        this.keyDDown = false;
     }
 
+    updateBody(body) {
+        for (const bodyCeil of this.body) {
+            if (bodyCeil.ceil !== undefined) {
+                bodyCeil.ceil.destroy(true)
+            }
+        }
+
+        this.body = body;
+        this.draw()
+    }
     calcLines() {
         const directions = ['up', 'down', 'left', 'right'];
         const state = {
@@ -91,22 +101,64 @@ export default class Snake {
     }
 
     update() {
-        if (this.keyW.isDown) {
+        let direction = this.direction
+
+        //
+        if(this.keyW.isDown && !this.keyWDown) {
+            direction = 'up'
             this.keyWDown = true;
-        } else if (this.keyS.isDown) {
+        }
+
+        if(this.keyW.isUp && this.keyWDown) {
+            this.keyWDown = false;
+        }
+
+        //
+        if(this.keyS.isDown && !this.keySDown) {
+            direction = 'down'
             this.keySDown = true;
-        } else if (this.keyA.isDown) {
+        }
+
+        if(this.keyS.isUp && this.keySDown) {
+            this.keySDown = false;
+        }
+
+        //
+        if(this.keyA.isDown && !this.keyADown) {
+            direction = 'left'
             this.keyADown = true;
-        } else if (this.keyD.isDown) {
+        }
+
+        if(this.keyA.isUp && this.keyADown) {
+            this.keyADown = false;
+        }
+
+        //
+        if(this.keyD.isDown && !this.keyDDown) {
+            direction = 'right'
             this.keyDDown = true;
         }
+
+        if(this.keyD.isUp && this.keyDDown) {
+            this.keyDDown = false;
+        }
+
+        if(this.direction !== direction) {
+            socket.emit('direction', {
+                id: this.playerID,
+                direction: direction
+            })
+            this.direction = direction
+        }
+
     }
 
     draw() {
         for (const bodyCeil of this.body) {
-            if (bodyCeil.ceil === null) {
+            if (bodyCeil.ceil === undefined) {
                 bodyCeil.ceil = this.scene.add.rectangle(0, 0, this.scene.width, this.scene.height, 0xff0000).setOrigin(0);
             }
+
             const x = bodyCeil.mx * this.scene.width;
             const y = bodyCeil.my * this.scene.height;
             bodyCeil.ceil.x = x;

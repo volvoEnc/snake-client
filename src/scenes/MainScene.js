@@ -1,6 +1,4 @@
 import Snake from "../Entities/Snake.js";
-import * as tf from "@tensorflow/tfjs";
-import {model} from "@tensorflow/tfjs";
 import {socket} from "../../main.js";
 
 export default class MainScene extends Phaser.Scene {
@@ -8,6 +6,10 @@ export default class MainScene extends Phaser.Scene {
     h = 24;
     width;
     height;
+
+    snakes = []
+
+    push
 
     constructor() {
         super({key: 'MainScene', active: true});
@@ -19,7 +21,7 @@ export default class MainScene extends Phaser.Scene {
 
     create() {
         this.map = [];
-        this.snake = new Snake(this, 12, 12);
+
         this.eat = null;
         this.reward = 0;
         this.linesState = null;
@@ -47,109 +49,122 @@ export default class MainScene extends Phaser.Scene {
             this.map.push(rowMap);
         }
 
-        this.gameLoop = this.time.addEvent({
-            repeat: -1,
-            delay: 200,
-            callback: () => {
-                if (this.eat === null) {
-                    this.eat = this.spawnEat();
-                }
-
-                try {
-                    this.linesState = this.snake.calcLines();
-                } catch (e) {
-                    this.gameLoop.destroy();
-                    this.reward = -100;
-                    console.log('lose')
-                }
-                const state = this.getMapState();
-                this.saveMapState(state);
-
-                this.snake.updateDirection();
-                this.snake.move();
-                this.reward -= 1;
-                if (this.snake.checkEat()) {
-                    this.eat.ceil.destroy(true);
-                    this.eat = null;
-                    this.reward += 30;
-                }
-                this.snake.draw();
-
-                let tmpDelay = 200 - this.reward / 2;
-                if (tmpDelay < 50) {
-                    tmpDelay = 25;
-                }
-                if (tmpDelay > 400) {
-                    tmpDelay = 400;
-                }
-                this.gameLoop.delay = tmpDelay;
-            }
-        });
-
-
-        // const tmodal = tf.sequential();
-        // tmodal.add(tf.layers.dense({units: 64, activation: 'relu', inputShape: [2]}));
-        // // tmodal.add(tf.layers.dense({units: 1, inputShape: [1]}));
-        // // tmodal.compile({loss: 'meanSquaredError', optimizer: 'sgd'}
+        // this.gameLoop = this.time.addEvent({
+        //     repeat: -1,
+        //     delay: 200,
+        //     callback: () => {
+        //         if (this.eat === null) {
+        //             this.eat = this.spawnEat();
+        //         }
         //
-        // const xs = tf.tensor2d([1, 2, 3, 4], [4, 1]);
-        // const ys = tf.tensor2d([1, 3, 5, 7], [4, 1]);
+        //         try {
+        //             this.linesState = this.snake.calcLines();
+        //         } catch (e) {
+        //             this.gameLoop.destroy();
+        //             this.reward = -100;
+        //             console.log('lose')
+        //         }
+        //         const state = this.getMapState();
+        //         this.saveMapState(state);
         //
-        // tmodal.fit(xs, ys).then(() => {
-        //     tmodal.predict(tf.tensor2d([3], [1, 1])).print(true);
+        //         this.snake.updateDirection();
+        //         this.snake.move();
+        //         this.reward -= 1;
+        //         if (this.snake.checkEat()) {
+        //             this.eat.ceil.destroy(true);
+        //             this.eat = null;
+        //             this.reward += 30;
+        //         }
+        //         this.snake.draw();
+        //
+        //         let tmpDelay = 200 - this.reward / 2;
+        //         if (tmpDelay < 50) {
+        //             tmpDelay = 25;
+        //         }
+        //         if (tmpDelay > 400) {
+        //             tmpDelay = 400;
+        //         }
+        //         this.gameLoop.delay = tmpDelay;
+        //     }
         // });
 
+        socket.on('create-id', (data) => {
+            this.playerID = data.id
+            socket.emit('ready')
+        })
+        socket.on('create', (data) => {
+            data.players.forEach((snake) => {
+                this.snakes.push(new Snake(this, snake.id, snake.body));
+            })
+        })
+
+        socket.on('step', (data) => {
+            data.players.forEach((dataSnake) => {
+                const candidate = this.snakes.find((snake) => snake.playerID === dataSnake.id)
+                if(candidate) {
+                    candidate.updateBody(dataSnake.body)
+                }
+            })
+        })
+
+        socket.emit('init');
     }
-
-    spawnEat() {
-        let isBlocked = false;
-        let eat = null;
-        const mx = Phaser.Math.Between(0, this.width);
-        const my = Phaser.Math.Between(0, this.height);
-
-        if (this.map[my][mx] === 1) {
-            isBlocked = true;
-        }
-        for (const bodyCeil of this.snake.body) {
-            if (bodyCeil.mx === mx && bodyCeil.my === my) {
-                isBlocked = true;
-                break;
-            }
-        }
-        if (!isBlocked) {
-            const ceil = this.add.rectangle(this.width * mx, this.height * my, this.width, this.height, 0x00ff00).setOrigin(0);
-            eat = {mx, my, ceil};
-        }
-
-        return eat;
-    }
-
-    saveMapState(state) {
-        socket.emit('write_state', state);
-    }
-
-    getMapState() {
-        const eatState = {eatx: -1, eaty: -1};
-        if (this.eat) {
-            eatState.eatx = this.eat.mx;
-            eatState.eaty = this.eat.my;
-        }
-        return {
-            reward: this.reward,
-            dir: this.snake.direction,
-            mx: this.snake.body[0].mx,
-            my: this.snake.body[0].my,
-            eatx: eatState.eatx,
-            eaty: eatState.eaty,
-            lt: this.linesState.t,
-            ld: this.linesState.d,
-            ll: this.linesState.l,
-            lr: this.linesState.r,
-        };
-    }
+    //
+    // spawnEat() {
+    //     let isBlocked = false;
+    //     let eat = null;
+    //     const mx = Phaser.Math.Between(0, this.width);
+    //     const my = Phaser.Math.Between(0, this.height);
+    //
+    //     if (this.map[my][mx] === 1) {
+    //         isBlocked = true;
+    //     }
+    //     for (const bodyCeil of this.snake.body) {
+    //         if (bodyCeil.mx === mx && bodyCeil.my === my) {
+    //             isBlocked = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!isBlocked) {
+    //         const ceil = this.add.rectangle(this.width * mx, this.height * my, this.width, this.height, 0x00ff00).setOrigin(0);
+    //         eat = {mx, my, ceil};
+    //     }
+    //
+    //     return eat;
+    // }
+    //
+    // saveMapState(state) {
+    //     // socket.emit('write_state', state);
+    // }
+    //
+    // getMapState() {
+    //     const eatState = {eatx: -1, eaty: -1};
+    //     if (this.eat) {
+    //         eatState.eatx = this.eat.mx;
+    //         eatState.eaty = this.eat.my;
+    //     }
+    //     return {
+    //         reward: this.reward,
+    //         dir: this.snake.direction,
+    //         mx: this.snake.body[0].mx,
+    //         my: this.snake.body[0].my,
+    //         eatx: eatState.eatx,
+    //         eaty: eatState.eaty,
+    //         lt: this.linesState.t,
+    //         ld: this.linesState.d,
+    //         ll: this.linesState.l,
+    //         lr: this.linesState.r,
+    //     };
+    // }
 
     update(time, delta) {
-        this.snake.update();
+        this.snakes.forEach((snake) => {
+            console.log(this.playerID)
+            console.log(snake.id)
+            if(this.playerID !== undefined && this.playerID === snake.playerID) {
+                snake.update();
+            }
+        })
         super.update(time, delta);
     }
 }
