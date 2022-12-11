@@ -3,7 +3,7 @@ import {socket} from "../../main.js";
 export default class Snake {
     body = [];
     direction = 'up';
-    isAppend = false;
+    speed = 200;
 
     constructor(scene, playerID, body, color) {
         this.body = body;
@@ -21,6 +21,10 @@ export default class Snake {
             this.keyADown = false;
             this.keyDDown = false;
         }
+
+        socket.on('direction', (dir) => {
+            this.direction = dir;
+        });
     }
 
     updateBody(body) {
@@ -38,37 +42,49 @@ export default class Snake {
             };
             if (bodyCeil.ceil) {
                 switch (bodyCeil.d) {
-                    case 'up': bodyGroups.up.push(bodyCeil.ceil); break;
-                    case 'down': bodyGroups.down.push(bodyCeil.ceil); break;
-                    case 'left': bodyGroups.left.push(bodyCeil.ceil); break;
-                    case 'right': bodyGroups.right.push(bodyCeil.ceil); break;
+                    case 'up':
+                        bodyCeil.ceil.y += this.scene.height;
+                        bodyGroups.up.push(bodyCeil.ceil);
+                        break;
+                    case 'down':
+                        bodyCeil.ceil.y -= this.scene.height;
+                        bodyGroups.down.push(bodyCeil.ceil);
+                        break;
+                    case 'left':
+                        bodyCeil.ceil.x += this.scene.width;
+                        bodyGroups.left.push(bodyCeil.ceil);
+                        break;
+                    case 'right':
+                        bodyCeil.ceil.x -= this.scene.width;
+                        bodyGroups.right.push(bodyCeil.ceil);
+                        break;
                 }
             }
 
-            // this.scene.tweens.add({
-            //     targets: bodyGroups.up,
-            //     ease: 'Linear',
-            //     duration: 50,
-            //     y: `-=${this.scene.width}`
-            // });
-            // this.scene.tweens.add({
-            //     targets: bodyGroups.down,
-            //     ease: 'Linear',
-            //     duration: 50,
-            //     y: `+=${this.scene.width}`
-            // });
-            // this.scene.tweens.add({
-            //     targets: bodyGroups.left,
-            //     ease: 'Linear',
-            //     duration: 50,
-            //     x: `-=${this.scene.width}`
-            // });
-            // this.scene.tweens.add({
-            //     targets: bodyGroups.right,
-            //     ease: 'Linear',
-            //     duration: 50,
-            //     x: `+=${this.scene.width}`
-            // });
+            this.scene.tweens.add({
+                targets: bodyGroups.up,
+                ease: 'Linear',
+                duration: this.speed,
+                y: `-=${this.scene.height}`
+            });
+            this.scene.tweens.add({
+                targets: bodyGroups.down,
+                ease: 'Linear',
+                duration: this.speed,
+                y: `+=${this.scene.height}`
+            });
+            this.scene.tweens.add({
+                targets: bodyGroups.left,
+                ease: 'Linear',
+                duration: this.speed,
+                x: `-=${this.scene.width}`
+            });
+            this.scene.tweens.add({
+                targets: bodyGroups.right,
+                ease: 'Linear',
+                duration: this.speed,
+                x: `+=${this.scene.width}`
+            });
         }
     }
 
@@ -124,25 +140,23 @@ export default class Snake {
         }
     }
 
-    animationMove() {
-        // for (const bodyElement of this.body) {
-        //
-        // }
-    }
-
     draw() {
+        let idx = 0;
         for (const bodyCeil of this.body) {
             if (bodyCeil.ceil === undefined) {
-                bodyCeil.ceil = this.scene.add.circle(0, 0, 12, parseInt(this.color)).setOrigin(0);
+                bodyCeil.ceil = this.scene.add.circle(0, 0, 12, parseInt(this.color)).setOrigin(0.5).setScale(1 - (0.01 * idx));
                 if(this.scene.playerID === this.playerID) {
                     bodyCeil.ceil.setStrokeStyle(1, 0x000000)
                 }
+                if (idx === 0) {
+                    bodyCeil.ceil.setStrokeStyle(3, 0x000000)
+                }
             }
-
-            const x = bodyCeil.mx * this.scene.width;
-            const y = bodyCeil.my * this.scene.height;
+            const x = bodyCeil.mx * this.scene.width + (this.scene.width / 2);
+            const y = bodyCeil.my * this.scene.height + (this.scene.height / 2);
             bodyCeil.ceil.x = x;
             bodyCeil.ceil.y = y;
+            idx++;
         }
     }
 

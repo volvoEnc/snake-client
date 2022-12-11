@@ -15,6 +15,8 @@ export default class MainScene extends Phaser.Scene {
 
     constructor() {
         super({key: 'MainScene', active: true});
+        this.rewardText = document.querySelector('.reward');
+        this.stepsLeftText = document.querySelector('.stepsLeft');
     }
 
     preload() {
@@ -62,6 +64,7 @@ export default class MainScene extends Phaser.Scene {
         })
 
         socket.on('step', (data) => {
+            this.stepsLeftText.innerHTML = `Осталось: ${data.stepsLeft}`;
             data.eats.forEach((data) => {
                 if(data) {
                     const candidate = this.eats.find((eat) => eat.id === data.id)
@@ -76,8 +79,12 @@ export default class MainScene extends Phaser.Scene {
             })
             data.players.forEach((dataSnake) => {
                 const candidate = this.snakes.find((snake) => snake.playerID === dataSnake.id)
+                const my = this.snakes.find((snake) => this.playerID === dataSnake.id);
                 if (candidate) {
-                    candidate.updateBody(dataSnake.body)
+                    candidate.updateBody(dataSnake.body);
+                }
+                if (my) {
+                    this.rewardText.innerHTML = `Счет: ${dataSnake.reward}`;
                 }
             })
         })
@@ -94,7 +101,11 @@ export default class MainScene extends Phaser.Scene {
             if(candidate) {
                 candidate.destroy()
             }
-        })
+        });
+
+        socket.on('end-game', (data) => {
+            alert(`MAX RESULT: ${data.maxReward}`);
+        });
 
         socket.emit('init');
     }
@@ -104,7 +115,6 @@ export default class MainScene extends Phaser.Scene {
             if(this.playerID !== undefined && this.playerID === snake.playerID) {
                 snake.update();
             }
-            snake.animationMove();
         })
         super.update(time, delta);
     }

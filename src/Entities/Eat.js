@@ -9,7 +9,15 @@ export default class Eat {
     }
 
     render() {
-        this.ceil = this.scene.add.circle(this.mx * this.scene.width + (this.radius / 2), this.my * this.scene.height + (this.radius / 2), 8, 0x49ff03).setOrigin(0);
+        this.ceil = this.scene.add.circle(this.mx * this.scene.width + (this.scene.width / 2), this.my * this.scene.height + (this.scene.height / 2), 8, 0x49ff03).setOrigin(0.5).setStrokeStyle(1, 0x000000);
+        this.scene.tweens.add({
+            targets: this.ceil,
+            ease: 'Linear',
+            duration: 250,
+            repeat: -1,
+            scale: 1.2,
+            yoyo: true
+        });
     }
 
     destroy() {
