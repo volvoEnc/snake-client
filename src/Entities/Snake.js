@@ -1,9 +1,12 @@
 import {socket} from "../../main.js";
+import SpeedRun from "@/Entities/SpeedRun.js";
 
 export default class Snake {
     body = [];
     direction = 'up';
-    speed = 175;
+    speed = 200;
+
+    speedBonus;
 
     constructor(scene, playerID, body, color) {
         this.body = body;
@@ -11,7 +14,10 @@ export default class Snake {
         this.color = color;
         this.playerID = playerID;
 
+        this.speedBonus = new SpeedRun(playerID, this);
+
         if(this.scene.playerID === this.playerID) {
+            this.keySpace = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
             this.keyW = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
             this.keyS = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
             this.keyA = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -20,6 +26,7 @@ export default class Snake {
             this.keySDown = false;
             this.keyADown = false;
             this.keyDDown = false;
+            this.keySpaceDown = false;
         }
 
         socket.on('direction', (dir) => {
@@ -32,6 +39,12 @@ export default class Snake {
 
         this.body = body;
         this.draw();
+
+        if (this.speedBonus.getBonusActive()) {
+            this.speed = 100;
+        } else {
+            this.speed = 200;
+        }
 
         for (const bodyCeil of this.body) {
             const bodyGroups = {
@@ -131,12 +144,21 @@ export default class Snake {
             this.keyDDown = false;
         }
 
-        if(this.direction !== direction) {
+        if (this.direction !== direction) {
             socket.emit('direction', {
                 id: this.playerID,
                 direction: direction
             })
             this.direction = direction
+        }
+
+        // Ускорение нажато
+        if (this.keySpace.isDown && !this.keySpaceDown) {
+            this.keySpaceDown = true;
+            this.speedBonus.activate();
+        }
+        if (this.keySpace.isUp && this.keySpaceDown) {
+            this.keySpaceDown = false;
         }
     }
 

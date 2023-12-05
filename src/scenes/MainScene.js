@@ -45,7 +45,7 @@ export default class MainScene extends Phaser.Scene {
                 let ceilValue = 0;
                 if (j === 0 || j === (this.w - 1) || i === 0 || i === (this.h - 1)) {
                     ceil.setFillStyle(0xcccccc);
-                    ceil.setStrokeStyle();
+                    ceil.setStrokeStyle(0x000000);
                     ceilValue = 1;
                 }
                 rowMap.push(ceilValue);
@@ -79,8 +79,8 @@ export default class MainScene extends Phaser.Scene {
             })
             data.players.forEach((dataSnake) => {
                 const candidate = this.snakes.find((snake) => snake.playerID === dataSnake.id)
-                const my = this.snakes.find((snake) => this.playerID === dataSnake.id);
-                if (candidate) {
+                const my = this.snakes.find(() => this.playerID === dataSnake.id);
+                if (candidate && dataSnake.needsUpdate) {
                     candidate.updateBody(dataSnake.body);
                 }
                 if (my) {
